@@ -4,28 +4,25 @@ from torchvision import transforms
 from model.vgg16_base import VGG16
 from torch.utils.data import DataLoader
 from datasets import load_data_from_path, data_after_process, ImageCaptionDataset
-
-#conts
-image_path = "D:/NCKH/ImageCaption/Dataset/Flickr8k_Dataset/Flicker8k_Dataset"
-annotation_path = "D:/NCKH/ImageCaption/Dataset/Flickr8k_text/Flickr8k.token.txt"  
-root_path_text =  "D:/NCKH/ImageCaption/Dataset/Flickr8k_text"               
+from config  import *
+#conts               
 uni_filenames, data = load_data_from_path(image_path, annotation_path)
-image_paths, captions, vocabulary = data_after_process(data, image_path, num_limted=40000)
+image_paths, captions, vocabulary = data_after_process(data, image_path)
 print("Number of Images : ", len(image_paths), "\nNumber of Captions: ", len(captions), "\nNumber of Vocabulary: ", len(vocabulary))
 
-model_base = VGG16()
 tokenizer = Tokenizer(vocabulary)
 transform = transforms.Compose([
     transforms.Resize(size = (224, 224)), 
     transforms.ToTensor(),
 ])
-def data_train_test_split(image_path, caption, root_path_text):
+def data_train_test_split(data, root_path_text):
     # Split the dataset into training and test set using 75% of the data for training
     # and 25% of the data for testing. The random state is fixed to ensure
     # reproducibility.
     train_path = root_path_text+"/Flickr_8k.trainImages.txt"
     val_path = root_path_text+"/Flickr_8k.devImages.txt"
     test_path = root_path_text+"/Flickr_8k.testImages.txt"
+    image_path, caption = data
     
     train_caption, val_caption, test_caption = [], [], []
     train_img, val_img, test_img = [], [], []
@@ -57,18 +54,17 @@ def data_train_test_split(image_path, caption, root_path_text):
         "test": (test_img, test_caption)
     }
 
-def data_train_test_val(batch, phase = 'train'):
-    data  = data_train_test_split(image_path, captions, root_path_text)
+def data_train_test_val(data, batch, phase = 'train'):
     images, captions = data["train"]
-    dataset = ImageCaptionDataset(images, captions, model_base, transform)
+    dataset = ImageCaptionDataset(images, captions, transform)
     dataloader_train = DataLoader(dataset, batch_size=batch, suffle=False)
     
     images, captions = data["val"]
-    dataset = ImageCaptionDataset(images, captions, model_base, transform)
+    dataset = ImageCaptionDataset(images, captions, transform)
     dataloader_val = DataLoader(dataset, batch_size=batch, suffle=False)
     
     images, captions = data["val"]
-    dataset = ImageCaptionDataset(images, captions, model_base, transform)
+    dataset = ImageCaptionDataset(images, captions, transform)
     dataloader_test = DataLoader(dataset, batch_size=batch, suffle=False)
     
     return dataloader_train, dataloader_val, dataloader_test

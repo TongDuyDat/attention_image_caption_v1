@@ -52,11 +52,12 @@ def data_after_process(data, root_path, num_limted = None):
 
 
 class ImageCaptionDataset(Dataset):
-    def __init__(self, image_paths, captions, model = None, transform_img = None):
+    def __init__(self, image_paths, captions, transform):
         self.image_paths = image_paths
         self.captions = captions
-        self.transform_img = transform_img
-        # self.transform_caption = transform_caption
+        # self.transform_img = transform_img
+        self.transform_caption = transform_caption
+        model = VGG16()
         self.model = model.eval()
         
     def __len__(self):
