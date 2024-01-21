@@ -74,9 +74,10 @@ def get_vocabulary(captions):
     source_vocab.set_default_index(source_vocab['<unk>'])
     return source_vocab
 class Tokenizer:
-    def __init__(self, vocab) -> None:
+    def __init__(self, vocab, max_length = None):
         self.vocab = vocab
         self.source_vocab = vocab.get_itos()
+        self.max_length = max_length
         
     def get_transform(self):
         """
@@ -106,7 +107,9 @@ class Tokenizer:
     def text2token(self, captions, padding = True):
         captions = list(map(self.encode, captions))
         if padding:
+            captions.append([0] * self.max_length)
             captions = T.ToTensor(0)(captions)
+            captions = captions[:, :-1]
         return captions
     
     def token2text(self, tokens):

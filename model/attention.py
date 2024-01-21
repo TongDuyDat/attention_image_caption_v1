@@ -1,6 +1,6 @@
 from torch import nn 
 import torch 
-from vgg16_base import GRU, VGG16
+from model.vgg16_base import GRU
 class Encode(nn.Module):
     def __init__(self, in_chanels, embedding_dim, bias = False) -> None:
         super(Encode, self).__init__()
@@ -12,11 +12,10 @@ class Encode(nn.Module):
     def forward(self, x):
         x = x.view(x.size(0), -1, self.in_chanels)
         batch, features, channels = x.shape
-        print("in encode ", x.shape)
         x = self.fc(x)
         x = self.dropout(x)
         x = self.relu(x)
-        x = x.view(batch, self.embedding_dim, features)
+        # x = x.view(batch, self.embedding_dim, features)
         return x
     
 class Decode(nn.Module):
@@ -45,9 +44,27 @@ class Decode(nn.Module):
         self.Vattn = nn.Linear(in_features= units, out_features = 1)
         
         self.tanh = nn.Tanh()
-        
-    def forward(self, x, features, hidden):
-        hidden_with_time_axis = torch.unsqueeze(hidden, dim=1)
+    
+    
+    def forward(self, encode_outs, tagets):
+        batch_size = encode_outs.size(0)
+        decode_input = torch.ones(batch_size, 1, dtype = torch.long, device= encode_outs.device)
+        decode_hidden = self.reset_state(batch_size).to(encode_outs.device)
+        decode_outs = []
+        attentions = []
+        max_length = tagets.size(1)
+        for i in range(max_length):
+            decode_output, decode_hidden, attention_weight = self.forward_step(decode_input, encode_outs, decode_hidden)
+            decode_outs.append(torch.unsqueeze(decode_output, dim= 1))
+            attentions.append(attention_weight)
+            decode_input = tagets[:, i].unsqueeze(1)
+        decoder_outputs = torch.cat(decode_outs, dim = 1)
+        decode_outs = nn.functional.softmax(decoder_outputs, dim = -1)
+        attentions = torch.cat(attentions, dim= 1)
+        return decode_outs, decode_hidden, attentions
+    
+    def forward_step(self, x, features, hidden):
+        hidden_with_time_axis = hidden.permute(1, 0, 2)
         # print("hidden_with_time_axis.shape ", hidden_with_time_axis.shape)
         
         # Attention score
@@ -74,9 +91,9 @@ class Decode(nn.Module):
         
         x = torch.cat([torch.unsqueeze(context_vector, dim=1), x], dim=-1)
         # print("concatenated_x ", x.shape)
-        
-        out, state = self.gru(x)
-        # print("GRU_output ", out.shape)
+        hidden_state = hidden_with_time_axis.permute(1, 0, 2)
+        out, state = self.gru(x, hidden_state)
+        # print("GRU_output ", out.shape, state.shape)
         
         x = self.fc(out)
         # print("fully_connected_output ", x.shape)
@@ -94,4 +111,22 @@ class Decode(nn.Module):
         return x, state, attention_weights
     def reset_state(self, batch):
         ''' Reset the hidden states of all layers in the model to zero.'''
-        return torch.zeros(size=(batch, self.units))
+        return torch.zeros(size=(1, batch, self.units))
+    
+
+# embedding_dim = 256
+# units = 512
+# features_shape = 512
+# attention_features_shape = 49
+# encoder = Encode(256 ,embedding_dim)
+# decoder = Decode(embedding_dim, units, 5120)
+
+# x = torch.rand(size = (4, 49, 256))
+
+# tagets = torch.randint(low= 0, high= 5120, size = (4, 32))
+
+# encode_out = encoder(x)
+# print(encode_out.shape)
+# decode_hidden = decoder.reset_state(4)
+# decode_outs, decode_hidden, attentions = decoder(encode_out, tagets)
+# print(decode_outs.shape)

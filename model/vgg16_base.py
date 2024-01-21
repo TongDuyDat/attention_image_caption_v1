@@ -3,7 +3,7 @@ from torch import nn
 import torch
 import numpy as np
 from torchsummary import summary
-import keras
+
 class VGG16(nn.Module):
     def __init__(self) -> None:
         super(VGG16, self).__init__()
@@ -21,7 +21,7 @@ class VGG16(nn.Module):
 class GRU(nn.Module):
     def __init__(self, input_size, hidden_size, num_layer = 1, batch_first = True, bidirectional = False) -> None:
         super(GRU, self).__init__()
-        self.gru = nn.GRU(input_size, hidden_size, num_layer, batch_first = True, bidirectional = False)
+        self.gru = nn.GRU(input_size, hidden_size, num_layer, batch_first = batch_first, bidirectional = bidirectional)
         for name, param in self.gru.named_parameters():
             if 'bias_ih' in name:
                 torch.nn.init.ones_(param)
@@ -31,6 +31,6 @@ class GRU(nn.Module):
                 torch.nn.init.ones_(param)
             elif 'weight_hh' in name:
                 torch.nn.init.zeros_(param)
-    def forward(self, x):
-        out, hidden = self.gru(x)
+    def forward(self, x, hidden):
+        out, hidden = self.gru(x, hidden)
         return out, hidden

@@ -42,21 +42,20 @@ def data_after_process(data, root_path, num_limted = None):
         data_new["filename"].iloc[i] = root_path + "/" + filename
     image_paths = data_new.filename.values
     captions = data_new.caption.values
-    vocabulary = get_vocabulary(captions)
     
     if num_limted is not None:
         image_paths, captions = shuffle(image_paths, captions, random_state= 1)
         image_paths = image_paths[: num_limted]
         captions = captions[: num_limted]
-    return image_paths, captions, vocabulary
+    return image_paths, captions
 
 
 class ImageCaptionDataset(Dataset):
-    def __init__(self, image_paths, captions, transform):
+    def __init__(self, image_paths, captions, transform_img = None):
         self.image_paths = image_paths
         self.captions = captions
-        # self.transform_img = transform_img
-        self.transform_caption = transform_caption
+        self.transform_img = transform_img
+        # self.transform_caption = transform_caption
         model = VGG16()
         self.model = model.eval()
         
