@@ -56,7 +56,7 @@ class Decode(nn.Module):
         for i in range(max_length):
             decode_output, decode_hidden, attention_weight = self.forward_step(decode_input, encode_outs, decode_hidden)
             decode_outs.append(torch.unsqueeze(decode_output, dim= 1))
-            attentions.append(attention_weight)
+            attentions.append(torch.unsqueeze(attention_weight, dim=1))
             decode_input = tagets[:, i].unsqueeze(1)
         decoder_outputs = torch.cat(decode_outs, dim = 1)
         decode_outs = nn.functional.softmax(decoder_outputs, dim = -1)
