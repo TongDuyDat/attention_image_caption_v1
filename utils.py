@@ -153,7 +153,7 @@ def visual_attentions(predicts_text, attention):
     :param attention: (N, max_len), predicted attentions from model
     :return: None
     """
-    attention = torch.reshape(attention, (31, 7, 14, 1))
+    attention = torch.reshape(attention, (31, 7, 14, 1)).detach().numpy()
     N = len(attention)
     assert N == attention.shape[0]
     
@@ -166,3 +166,8 @@ def visual_attentions(predicts_text, attention):
         ax.set_title(predicts_text[i])
         count += 1
     plt.show()    
+
+def load_model(model, init_weights):
+    weights = torch.load(init_weights)
+    model.load_state_dict(weights)
+    return model

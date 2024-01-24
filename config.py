@@ -5,3 +5,5 @@ embedding_dim = 256
 units = 512
 features_shape = 512
 attention_features_shape = 49
+path_feature = "D:/NCKH/ImageCaption/attention_image_caption_v1/features_img_vgg"
+VOCAB_SIZE = 0

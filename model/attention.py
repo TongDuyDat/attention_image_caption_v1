@@ -1,6 +1,7 @@
 from torch import nn 
 import torch 
 from model.vgg16_base import GRU
+import random
 class Encode(nn.Module):
     def __init__(self, in_chanels, embedding_dim, bias = False) -> None:
         super(Encode, self).__init__()
@@ -44,26 +45,8 @@ class Decode(nn.Module):
         self.Vattn = nn.Linear(in_features= units, out_features = 1)
         
         self.tanh = nn.Tanh()
-    
-    
-    def forward(self, encode_outs, tagets):
-        batch_size = encode_outs.size(0)
-        decode_input = torch.ones(batch_size, 1, dtype = torch.long, device= encode_outs.device)
-        decode_hidden = self.reset_state(batch_size).to(encode_outs.device)
-        decode_outs = []
-        attentions = []
-        max_length = tagets.size(1)
-        for i in range(max_length):
-            decode_output, decode_hidden, attention_weight = self.forward_step(decode_input, encode_outs, decode_hidden)
-            decode_outs.append(torch.unsqueeze(decode_output, dim= 1))
-            attentions.append(torch.unsqueeze(attention_weight, dim=1))
-            decode_input = tagets[:, i].unsqueeze(1)
-        decoder_outputs = torch.cat(decode_outs, dim = 1)
-        decode_outs = nn.functional.softmax(decoder_outputs, dim = -1)
-        attentions = torch.cat(attentions, dim= 1)
-        return decode_outs, decode_hidden, attentions
-    
-    def forward_step(self, x, features, hidden):
+
+    def forward(self, x, features, hidden):
         hidden_with_time_axis = hidden.permute(1, 0, 2)
         # print("hidden_with_time_axis.shape ", hidden_with_time_axis.shape)
         
@@ -114,6 +97,61 @@ class Decode(nn.Module):
         return torch.zeros(size=(1, batch, self.units))
     
 
+class Squen2Squen(nn.Module):
+    def __init__(self,encode, decode, max_length, *args, **kwargs) -> None:
+        super(Squen2Squen, self).__init__(*args, **kwargs)
+        self.encode = encode
+        self.decode = decode
+        self.max_length = max_length 
+    def forward(self, img_feature, tagets, tearch_ratio = 0.5):
+        encode_out = self.encode(img_feature)
+        batch_size = encode_out.size(0)
+        decode_input = torch.ones(batch_size, 1, dtype= torch.long, device= encode_out.device)
+        decode_hidden = self.decode.reset_state(batch_size).to(encode_out.device)
+        decode_outs = []
+        attentions = []
+        
+        for i in range(self.max_length - 1):
+            # print(self.max_length)
+            decode_output, decode_hidden, attention = self.decode(decode_input, encode_out, decode_hidden)
+            decode_outs.append(torch.unsqueeze(decode_output, dim= 1))
+            attentions.append(torch.unsqueeze(attention, dim=1))
+            if random.random() < tearch_ratio:
+                taget = torch.argmax(decode_output, dim = 1)
+                decode_input = taget.unsqueeze(1)
+                continue
+            decode_input = tagets[:, i].unsqueeze(1)
+        decoder_outputs = torch.cat(decode_outs, dim = 1)
+        # decode_outs = nn.functional.softmax(decoder_outputs, dim = -1)
+        attentions = torch.cat(attentions, dim= 1)
+        return decoder_outputs, decode_hidden, attentions
+    
+    
+    
+    
+        #     attentions.append(torch.unsqueeze(attention_weight, dim=1)
+        # def forward(self, encode_outs, tagets = None):
+        # batch_size = encode_outs.size(0)
+        # decode_input = torch.ones(batch_size, 1, dtype = torch.long, device= encode_outs.device)
+        # decode_hidden = self.reset_state(batch_size).to(encode_outs.device)
+        # decode_outs = []
+        # attentions = []
+        # max_length = 31
+        # for i in range(max_length):
+        #     decode_output, decode_hidden, attention_weight = self.forward_step(decode_input, encode_outs, decode_hidden)
+        #     decode_outs.append(torch.unsqueeze(decode_output, dim= 1))
+        #     attentions.append(torch.unsqueeze(attention_weight, dim=1))
+        #     if tagets == None:
+        #         taget = torch.argmax(decode_output, dim = 1)
+        #         decode_input = taget.unsqueeze(1)
+        #         continue
+        #     decode_input = tagets[:, i].unsqueeze(1)
+        # decoder_outputs = torch.cat(decode_outs, dim = 1)
+        
+        # # decode_outs = nn.functional.softmax(decoder_outputs, dim = -1)
+        # attentions = torch.cat(attentions, dim= 1)
+        # return decoder_outputs, decode_hidden, attentions
+    
 # embedding_dim = 256
 # units = 512
 # features_shape = 512

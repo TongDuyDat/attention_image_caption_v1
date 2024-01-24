@@ -12,7 +12,7 @@ from torchvision import transforms
 from model.vgg16_base import VGG16
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
-
+from config import *
 #function 
 def load_data_from_path(image_path, annotation_path):
     images = glob(image_path + "/*")
@@ -39,7 +39,7 @@ def data_after_process(data, root_path, num_limted = None):
         new_caption = text_clean(caption)
         new_caption = add_tags_start_end(new_caption)
         data_new["caption"].iloc[i] = new_caption
-        data_new["filename"].iloc[i] = root_path + "/" + filename
+        data_new["filename"].iloc[i] = path_feature  + "/" + filename.replace(".jpg", ".pt")
     image_paths = data_new.filename.values
     captions = data_new.caption.values
     
@@ -67,18 +67,19 @@ class ImageCaptionDataset(Dataset):
         caption = self.captions[idx]
         
         # preprocessing the image
-        image = Image.open(img_path)
-        image = self.transform_img(image)
-        image = torch.unsqueeze(image, dim = 0)
-        imgae_features = self.model(image)
-        batch, channel, _, _ = imgae_features.shape
-        imgae_features = imgae_features.view(batch, channel, -1)
+        # image = Image.open(img_path)
+        # image = self.transform_img(image)
+        # image = torch.unsqueeze(image, dim = 0)
+        # imgae_features = self.model(image)
+        # batch, channel, _, _ = imgae_features.shape
+        # imgae_features = imgae_features.view(batch, channel, -1)
         
+        image_features = torch.load(img_path)
         # processing caption 
         
         # caption = transform_caption(caption)
         
-        return imgae_features, caption
+        return image_features, caption
             
 # const 
 
