@@ -1,6 +1,5 @@
 from typing import Any
 from matplotlib import pyplot as plt 
-from keras.preprocessing.image import load_img
 import textwrap
 import string
 from torchtext.vocab import build_vocab_from_iterator
@@ -11,6 +10,7 @@ import torchtext.transforms as T
 import numpy as np
 import torch
 def visualizing(uni_filenames, images_root_path, data):
+    from keras.preprocessing.image import load_img
     npic = len(uni_filenames)
     npix = 224
     target_size = (npix,npix,3)
@@ -78,7 +78,7 @@ class Tokenizer:
     def __init__(self, vocab, max_length = None):
         self.vocab = vocab
         self.source_vocab = vocab.get_itos()
-        self.max_length = max_length
+        self.max_length = max_length + 1
         
     def get_transform(self):
         """
@@ -86,8 +86,10 @@ class Tokenizer:
         """
         text_transform = T.Sequential(
             T.VocabTransform(vocab= self.vocab),
-            T.AddToken(1, begin= True),
-            T.AddToken(2, begin=False)
+            T.AddToken(2, begin=False),
+            # T.AddToken(1, begin= True),
+            T.ToTensor(0),
+            T.PadTransform(self.max_length, pad_value= 0),
         )
         return text_transform
     
@@ -107,11 +109,14 @@ class Tokenizer:
     
     def text2token(self, captions, padding = True):
         captions = list(map(self.encode, captions))
-        if padding:
-            captions.append([0] * self.max_length)
-            captions = T.ToTensor(0)(captions)
-            captions = captions[:, :-1]
-        return captions
+        # if padding:
+        #     print("captions.shape: ", len(captions))
+        #     print(captions[0])
+        #     captions = T.ToTensor()(captions)
+        #     captions = captions[:, :-1]
+        # torch.tensor(captions)
+        captions = torch.stack([cap.unsqueeze(0) for cap in captions], dim= 0)
+        return captions.view(captions.size(0), captions.size(2))
     
     def token2text(self, tokens):
         tokens = list(map(self.decode, tokens))
@@ -153,7 +158,7 @@ def visual_attentions(predicts_text, attention):
     :param attention: (N, max_len), predicted attentions from model
     :return: None
     """
-    attention = torch.reshape(attention, (31, 7, 14, 1)).detach().numpy()
+    attention = torch.reshape(attention, (attention.size(0), 7, 14, 1)).detach().numpy()
     N = len(attention)
     assert N == attention.shape[0]
     

@@ -103,13 +103,14 @@ def data_loader(image_path, annotation_path, batch_size):
     max_length = 0
     for image, caption in data.values():
         max_length = max(max_length, len(max(caption, key = len).split()))
+       
         
     tokenizer = Tokenizer(vocab, max_length)
     
     images_train, caption_train = data["train"]
     images_val, caption_val = data["val"]
     images_test, caption_test = data["test"]
-    
+
     train_captions = tokenizer.text2token(caption_train)
     val_captions = tokenizer.text2token(caption_val) 
     test_captions = tokenizer.text2token(caption_test) 

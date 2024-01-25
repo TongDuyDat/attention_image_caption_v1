@@ -111,8 +111,7 @@ class Squen2Squen(nn.Module):
         decode_outs = []
         attentions = []
         
-        for i in range(self.max_length - 1):
-            # print(self.max_length)
+        for i in range(0, self.max_length):
             decode_output, decode_hidden, attention = self.decode(decode_input, encode_out, decode_hidden)
             decode_outs.append(torch.unsqueeze(decode_output, dim= 1))
             attentions.append(torch.unsqueeze(attention, dim=1))

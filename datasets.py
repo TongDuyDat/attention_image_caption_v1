@@ -56,8 +56,8 @@ class ImageCaptionDataset(Dataset):
         self.captions = captions
         self.transform_img = transform_img
         # self.transform_caption = transform_caption
-        model = VGG16()
-        self.model = model.eval()
+        # model = VGG16()
+        # self.model = model.eval()
         
     def __len__(self):
         return len(self.image_paths)
@@ -78,7 +78,6 @@ class ImageCaptionDataset(Dataset):
         # processing caption 
         
         # caption = transform_caption(caption)
-        
         return image_features, caption
             
 # const 

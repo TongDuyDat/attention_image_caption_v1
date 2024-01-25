@@ -97,7 +97,7 @@ def train(epochs, batch_size, lr):
     # Define the constant values
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     # Loading data 
-    trainloader, valloader, testloader, tokenizer = data_loader(image_path, annotation_path, batch_size= 32)
+    trainloader, valloader, testloader, tokenizer = data_loader(image_path, annotation_path, batch_size= batch_size)
     vocab_size = len(tokenizer.vocab)
     # Init model encoder and decoder 
     encoder = Encode(embedding_dim, embedding_dim)
@@ -112,8 +112,8 @@ def train(epochs, batch_size, lr):
     
     
     # data test
-    trainloader = valloader
-    valloader = testloader
+    # trainloader = valloader
+    # valloader = testloader
     
     valid_loss_save = sys.maxsize
     
