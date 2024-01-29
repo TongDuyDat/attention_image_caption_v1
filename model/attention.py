@@ -126,31 +126,6 @@ class Squen2Squen(nn.Module):
         return decoder_outputs, decode_hidden, attentions
     
     
-    
-    
-        #     attentions.append(torch.unsqueeze(attention_weight, dim=1)
-        # def forward(self, encode_outs, tagets = None):
-        # batch_size = encode_outs.size(0)
-        # decode_input = torch.ones(batch_size, 1, dtype = torch.long, device= encode_outs.device)
-        # decode_hidden = self.reset_state(batch_size).to(encode_outs.device)
-        # decode_outs = []
-        # attentions = []
-        # max_length = 31
-        # for i in range(max_length):
-        #     decode_output, decode_hidden, attention_weight = self.forward_step(decode_input, encode_outs, decode_hidden)
-        #     decode_outs.append(torch.unsqueeze(decode_output, dim= 1))
-        #     attentions.append(torch.unsqueeze(attention_weight, dim=1))
-        #     if tagets == None:
-        #         taget = torch.argmax(decode_output, dim = 1)
-        #         decode_input = taget.unsqueeze(1)
-        #         continue
-        #     decode_input = tagets[:, i].unsqueeze(1)
-        # decoder_outputs = torch.cat(decode_outs, dim = 1)
-        
-        # # decode_outs = nn.functional.softmax(decoder_outputs, dim = -1)
-        # attentions = torch.cat(attentions, dim= 1)
-        # return decoder_outputs, decode_hidden, attentions
-    
 # embedding_dim = 256
 # units = 512
 # features_shape = 512
